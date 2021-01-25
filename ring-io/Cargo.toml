@@ -1,0 +1,17 @@
+[package]
+name = "ring-io"
+version = "0.0.1"
+authors = ["Nugine <nugine@foxmail.com>"]
+edition = "2018"
+description = "An easy-to-use interface for io_uring"
+license = "MIT"
+repository = "https://github.com/Nugine/ring-io"
+keywords = ["async", "io_uring"]
+categories = ["asynchronous", "network-programming", "filesystem"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bitflags = "1.2.1"
+libc = "0.2.82"
+uring-sys = "0.7.4"

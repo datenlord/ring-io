@@ -1,0 +1,18 @@
+[package]
+name = "ring-io-examples"
+version = "0.0.1"
+authors = ["Nugine <nugine@foxmail.com>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.ring-io]
+path = "../ring-io"
+version = "0.0.1"
+
+[dependencies]
+anyhow = "1.0.38"
+structopt = "0.3.21"
+aligned-utils = "1.0.0"
+libc = "0.2.82"
