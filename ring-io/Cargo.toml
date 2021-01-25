@@ -1,6 +1,6 @@
 [package]
 name = "ring-io"
-version = "0.0.1"
+version = "0.0.2-dev"
 authors = ["Nugine <nugine@foxmail.com>"]
 edition = "2018"
 description = "An easy-to-use interface for io_uring"

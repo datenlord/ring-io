@@ -1,6 +1,6 @@
 [package]
 name = "ring-io-examples"
-version = "0.0.1"
+version = "0.0.2-dev"
 authors = ["Nugine <nugine@foxmail.com>"]
 edition = "2018"
 publish = false
@@ -9,7 +9,7 @@ publish = false
 
 [dependencies.ring-io]
 path = "../ring-io"
-version = "0.0.1"
+version = "0.0.2-dev"
 
 [dependencies]
 anyhow = "1.0.38"
