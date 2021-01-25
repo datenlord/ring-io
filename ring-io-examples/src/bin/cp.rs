@@ -1,6 +1,6 @@
 use self::chunk::{DataChunkPtr, DataChunkState};
 use ring_io::sqe::{FsyncFlags, PrepareSqe, SubmissionFlags};
-use ring_io::{Ring, RingBuilder, CQE, SQE};
+use ring_io::{Ring, RingBuilder, CQE};
 
 use std::collections::VecDeque;
 use std::convert::TryInto;
@@ -371,7 +371,7 @@ fn copy_file(
             }
         }
         let n_reaped = cqes.len() as u32;
-        cq.advance(n_reaped);
+        unsafe { cq.advance_unchecked(n_reaped) };
         n_completed += n_reaped;
 
         if total_n_written >= cp_size {
@@ -385,7 +385,7 @@ fn copy_file(
             .get_sqe()
             .expect("no available SQE in the submission queue");
         unsafe {
-            SQE::prep_fsync(sqe, dst_fd, FsyncFlags::empty())
+            sqe.prep_fsync(dst_fd, FsyncFlags::empty())
                 .enable_flags(SubmissionFlags::IO_DRAIN);
         }
 
@@ -397,7 +397,7 @@ fn copy_file(
             .expect("no available CQE in the completion queue");
 
         cqe.io_result()?;
-        cq.advance(1);
+        unsafe { cq.advance_unchecked(1) };
     }
 
     debug_assert_eq!(sq.prepared(), 0);

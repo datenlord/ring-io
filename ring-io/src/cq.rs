@@ -48,11 +48,18 @@ impl CompletionQueue<'_> {
         }
     }
 
+    /// # Safety
+    pub unsafe fn advance_unchecked(&mut self, n: u32) {
+        let ring_ptr = self.ring.get_mut_ptr();
+        sys::io_uring_cq_advance(ring_ptr, n);
+    }
+
+    // TODO: document this behavior
     pub fn advance(&mut self, n: u32) {
-        unsafe {
-            let ring_ptr = self.ring.get_mut_ptr();
-            sys::io_uring_cq_advance(ring_ptr, n);
+        if n > self.ready() {
+            panic!("advance value must not be greater than cq.ready()");
         }
+        unsafe { self.advance_unchecked(n) }
     }
 
     pub fn ready(&self) -> u32 {
