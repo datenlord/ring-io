@@ -164,5 +164,49 @@ pub trait PrepareSqe {
         do_prep(self, |sqe| sys::io_uring_prep_fsync(sqe, fd, flags.bits()))
     }
 
+    /// # Safety
+    /// See [`SQE`]
+    unsafe fn prep_read_fixed(
+        &mut self,
+        fd: RawFd,
+        buf: *mut u8,
+        n_bytes: usize,
+        offset: isize,
+        buf_index: usize,
+    ) -> &mut SQE {
+        do_prep(self, |sqe| {
+            sys::io_uring_prep_read_fixed(
+                sqe,
+                fd,
+                buf.cast(),
+                n_bytes as u32,
+                offset as libc::off_t,
+                buf_index as i32,
+            )
+        })
+    }
+
+    /// # Safety
+    /// See [`SQE`]
+    unsafe fn prep_write_fixed(
+        &mut self,
+        fd: RawFd,
+        buf: *const u8,
+        n_bytes: usize,
+        offset: isize,
+        buf_index: usize,
+    ) -> &mut SQE {
+        do_prep(self, |sqe| {
+            sys::io_uring_prep_write_fixed(
+                sqe,
+                fd,
+                buf.cast(),
+                n_bytes as u32,
+                offset as libc::off_t,
+                buf_index as i32,
+            )
+        })
+    }
+
     // TODO: impl more prep_* methods
 }
