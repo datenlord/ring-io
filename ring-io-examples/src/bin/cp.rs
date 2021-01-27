@@ -1,6 +1,7 @@
 use self::chunk::{DataChunkPtr, DataChunkState};
+use ring_io::cqe::CQE;
+use ring_io::ring::{Ring, RingBuilder};
 use ring_io::sqe::{FsyncFlags, PrepareSqe, SubmissionFlags};
-use ring_io::{Ring, RingBuilder, CQE};
 
 use std::collections::VecDeque;
 use std::convert::TryInto;

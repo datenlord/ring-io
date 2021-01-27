@@ -1,6 +1,6 @@
 use crate::ring::{RawRing, RawRingPtr};
-use crate::sqe::PrepareSqe;
-use crate::{sys, utils, SQE};
+use crate::sqe::{PrepareSqe, SQE};
+use crate::{sys, utils};
 
 use std::mem::{self, MaybeUninit};
 use std::{fmt, io};
