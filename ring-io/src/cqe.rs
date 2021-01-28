@@ -2,8 +2,6 @@ use crate::{sys, utils};
 
 use std::{fmt, io, ptr};
 
-use bitflags::bitflags;
-
 #[repr(transparent)]
 pub struct CQE {
     cqe: sys::io_uring_cqe,
@@ -12,34 +10,15 @@ pub struct CQE {
 unsafe impl Send for CQE {}
 unsafe impl Sync for CQE {}
 
-bitflags! {
-    pub struct CompletionFlags: u32 {
-        const BUFFER_SHIFT    = sys::IORING_CQE_BUFFER_SHIFT;
-    }
-}
-
 impl CQE {
-    // --- constructor ---
-
-    pub fn new(user_data: u64, res: i32, flags: CompletionFlags) -> Self {
-        let flags = flags.bits();
-        Self {
-            cqe: sys::io_uring_cqe {
-                user_data,
-                res,
-                flags,
-            },
-        }
-    }
-
     // --- getters ---
 
     pub fn user_data(&self) -> u64 {
         self.cqe.user_data
     }
 
-    pub fn flags(&self) -> CompletionFlags {
-        unsafe { CompletionFlags::from_bits_unchecked(self.cqe.flags) }
+    pub fn raw_flags(&self) -> u32 {
+        self.cqe.flags
     }
 
     pub fn raw_result(&self) -> i32 {
@@ -70,7 +49,7 @@ impl fmt::Debug for CQE {
         f.debug_struct("CQE")
             .field("user_data", &self.user_data())
             .field("res", &self.raw_result())
-            .field("Flags", &self.flags())
+            .field("flags", &self.raw_flags())
             .finish()
     }
 }
