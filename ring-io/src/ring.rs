@@ -101,17 +101,15 @@ impl Ring {
     }
 
     pub fn registrar(&mut self) -> Registrar<'_> {
-        let ring_fd = self.ring.ring_fd();
-        unsafe { Registrar::new_unchecked(ring_fd) }
+        unsafe { Registrar::new_unchecked(&mut self.ring) }
     }
 
     pub fn split(&mut self) -> (SubmissionQueue<'_>, CompletionQueue<'_>, Registrar<'_>) {
-        let ring_fd = self.ring.ring_fd();
         let ring: *mut RawRing = &mut self.ring;
         unsafe {
             let sq = SubmissionQueue::new_unchecked(ring);
             let cq = CompletionQueue::new_unchecked(ring);
-            let reg = Registrar::new_unchecked(ring_fd);
+            let reg = Registrar::new_unchecked(ring);
             (sq, cq, reg)
         }
     }

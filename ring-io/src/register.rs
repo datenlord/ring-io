@@ -1,32 +1,21 @@
-use crate::ring::RawRing;
-use crate::sys;
+use crate::ring::{RawRing, RawRingPtr};
+use crate::{sys, utils};
 
-use std::marker::PhantomData;
 use std::os::unix::io::RawFd;
-use std::{fmt, io, ptr};
+use std::{fmt, io};
 
 pub struct Registrar<'r> {
-    ring_fd: RawFd,
-    _marker: PhantomData<&'r mut RawRing>,
+    ring: RawRingPtr<'r>,
 }
 
 unsafe impl Send for Registrar<'_> {}
 unsafe impl Sync for Registrar<'_> {}
 
 impl Registrar<'_> {
-    pub(crate) unsafe fn new_unchecked(ring_fd: RawFd) -> Self {
+    pub(crate) unsafe fn new_unchecked(ptr: *mut RawRing) -> Self {
         Self {
-            ring_fd,
-            _marker: PhantomData,
+            ring: RawRingPtr::new_unchecked(ptr),
         }
-    }
-
-    fn syscall_register(&self, f: impl FnOnce(RawFd) -> i32) -> io::Result<()> {
-        let ret = f(self.ring_fd);
-        if ret < 0 {
-            return Err(io::Error::last_os_error());
-        }
-        Ok(())
     }
 
     /// # Safety
@@ -35,40 +24,39 @@ impl Registrar<'_> {
         iovecs: *const libc::iovec,
         n_vecs: usize,
     ) -> io::Result<()> {
-        self.syscall_register(|fd| {
-            sys::pure::io_uring_register(
-                fd,
-                sys::IORING_REGISTER_BUFFERS,
-                iovecs.cast(),
-                n_vecs as u32,
-            )
-        })
+        let ring_ptr = self.ring.get_mut_ptr();
+        let ret = sys::io_uring_register_buffers(ring_ptr, iovecs, n_vecs as u32);
+        utils::resultify(ret)?;
+        Ok(())
     }
 
     pub fn unregister_buffers(&self) -> io::Result<()> {
-        self.syscall_register(|fd| unsafe {
-            sys::pure::io_uring_register(fd, sys::IORING_UNREGISTER_BUFFERS, ptr::null(), 0)
-        })
+        let ring_ptr = self.ring.get_mut_ptr();
+        let ret = unsafe { sys::io_uring_unregister_buffers(ring_ptr) };
+        utils::resultify(ret)?;
+        Ok(())
     }
 
     pub fn register_files(&self, files: &[RawFd]) -> io::Result<()> {
-        self.syscall_register(|fd| unsafe {
-            let files_ptr = files.as_ptr();
-            let nr_files = files.len() as u32;
-            sys::pure::io_uring_register(fd, sys::IORING_REGISTER_FILES, files_ptr.cast(), nr_files)
-        })
+        let ring_ptr = self.ring.get_mut_ptr();
+        let files_ptr = files.as_ptr();
+        let nr_files = files.len() as u32;
+        let ret = unsafe { sys::io_uring_register_files(ring_ptr, files_ptr, nr_files) };
+        utils::resultify(ret)?;
+        Ok(())
     }
 
     pub fn unregister_files(&self) -> io::Result<()> {
-        self.syscall_register(|fd| unsafe {
-            sys::pure::io_uring_register(fd, sys::IORING_UNREGISTER_FILES, ptr::null(), 0)
-        })
+        let ring_ptr = self.ring.get_mut_ptr();
+        let ret = unsafe { sys::io_uring_unregister_files(ring_ptr) };
+        utils::resultify(ret)?;
+        Ok(())
     }
 }
 
 impl fmt::Debug for Registrar<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let fd = self.ring_fd;
+        let fd = self.ring.get_ref().ring_fd();
         f.debug_struct(std::any::type_name::<Self>())
             .field("ring_fd", &fd)
             .finish()
