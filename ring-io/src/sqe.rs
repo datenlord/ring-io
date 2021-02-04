@@ -16,14 +16,6 @@ pub struct SQE {
 unsafe impl Send for SQE {}
 unsafe impl Sync for SQE {}
 
-impl Clone for SQE {
-    fn clone(&self) -> Self {
-        Self {
-            sqe: unsafe { ptr::read(&self.sqe) },
-        }
-    }
-}
-
 impl fmt::Debug for SQE {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "SQE {{ .. }}")
